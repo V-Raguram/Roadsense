@@ -1,7 +1,7 @@
 function dataset=createRoadsenseScenarioHarnessInputs(scenarioID,stopTime)
 %CREATEROADSENSESCENARIOHARNESSINPUTS Create named root inputs for simulation.
 arguments
-    scenarioID (1,1) double {mustBeInteger,mustBeInRange(scenarioID,1,5)} = 1
+    scenarioID (1,1) double {mustBeInteger,mustBeInRange(scenarioID,1,6)} = 1
     stopTime (1,1) double {mustBePositive} = 2
 end
 time=[0;stopTime];

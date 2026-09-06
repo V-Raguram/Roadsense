@@ -67,6 +67,19 @@ For a true 3D vehicle replay after (or while) the autonomous stack runs, use:
 runRoadsense3DReplay(ScenarioID=1,StopTime=32)
 ```
 
+Until RoadRunner is available, the temporary MATLAB 3D confidence demo can
+be opened with one command:
+
+```matlab
+startRoadsenseConfidenceDemo
+```
+
+The launcher replays a previously verified full-stack result immediately when
+one exists. To execute the complete closed-loop Simulink model again before
+the real-time replay, use `startRoadsenseConfidenceDemo(RunModel=true)`. The
+temporary scenario is separate from the five required benchmark scenarios and
+does not replace RoadRunner validation.
+
 This opens the presentation-ready closed-loop harness and fits the organized
 environment, autonomy, plant, and evaluator regions to the Simulink window.
 For component tests and scripted validation, run:

@@ -45,6 +45,6 @@ classdef RoadsenseScenarioLibrarySystem < matlab.System
         end
         function varargout=isOutputFixedSizeImpl(~); varargout=repmat({true},1,39); end
         function varargout=isOutputComplexImpl(~); varargout=repmat({false},1,39); end
-        function icon=getIconImpl(~); icon="Roadsense\n5-Scenario Library"; end
+        function icon=getIconImpl(~); icon="Roadsense\n5 Scenarios + Demo"; end
     end
 end

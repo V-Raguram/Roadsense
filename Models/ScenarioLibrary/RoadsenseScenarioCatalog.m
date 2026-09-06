@@ -119,6 +119,18 @@ switch id
            makePlan(503,9,[1.6 0.65 1.3],[7 11],[72 -7 0;74 7 0]); ...
            makePlan(504,6,[1.8 0.6 1.2],[0 20],[30 1.5 0;100 1.5 0])];
         if time>=5.5 && time<=11; eventMask=bitor(eventMask,uint16(16)); end
+    case 6 % Temporary confidence demo (not part of the five-scenario benchmark)
+        name="Temporary 3D Confidence Demo"; duration=12;
+        x=(0:0.25:12).'; y=0.10*sin(pi*x/12); route=[x y zeros(size(x))];
+        speeds=single(2.0*ones(size(x)));
+        s.DesiredSpeed=single(2.0); s.SpeedLimit=single(3.0);
+        s.GoalRadius=single(3.00); s.Friction=single(0.82);
+        s.InitialYaw=atan2(y(2)-y(1),x(2)-x(1));
+        % This confidence route deliberately contains no traffic actors. It
+        % proves the complete stack can initialize, plan, control, move and
+        % stop at a goal before obstacle scenarios are tuned independently.
+        p=repmat(emptyPlan(),0,1);
+        eventMask=bitor(uint16(1),uint16(2));
     otherwise
         route=zeros(0,3); speeds=zeros(0,1); s.InitialPosition=[0;0;0];
 end

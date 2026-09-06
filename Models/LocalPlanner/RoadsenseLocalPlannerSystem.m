@@ -217,10 +217,23 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
             transitionDistance=max(10,2.5*max(initialSpeed,double(behaviour.TargetSpeed)));
             segmentIndex=2; cumulativeStart=0;
             routeSpeed=double(reference.RecommendedSpeeds(1));
+            routeDifferences=diff(double(reference.Positions(1:nref,:)),1,1);
+            routeLength=sum(vecnorm(routeDifferences,2,2));
+            terminalBuffer=0.15;
+            terminalDeceleration=max(0.75,min(2.5,abs(double(behaviour.MinimumAcceleration))));
             for point=1:object.MaxPlanPoints
                 if point>1
                     targetSpeed=min(max(0,double(behaviour.TargetSpeed)*double(speedScale)), ...
                         max(0,routeSpeed));
+                    % Shape speed against the finite reference endpoint. A
+                    % candidate must stop at the goal rather than continue
+                    % accumulating progress while its position is clamped to
+                    % the final route sample. Without this bound, otherwise
+                    % safe candidates periodically became infeasible as the
+                    % six-second horizon approached a short route endpoint.
+                    remainingDistance=max(0,routeLength-progress-terminalBuffer);
+                    terminalSpeed=sqrt(2*terminalDeceleration*remainingDistance);
+                    targetSpeed=min(targetSpeed,terminalSpeed);
                     desiredAcceleration=(targetSpeed-speed)/1.5;
                     desiredAcceleration=min(max(desiredAcceleration,minimumAcceleration),maximumAcceleration);
                     maximumDelta=double(object.MaximumJerk)*dt;
@@ -228,7 +241,8 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                         acceleration+maximumDelta);
                     newSpeed=max(0,speed+acceleration*dt);
                     if targetSpeed<=0.01 && newSpeed<0.15
-                        newSpeed=0; acceleration=0;
+                        newSpeed=0;
+                        acceleration=min(0,acceleration+maximumDelta);
                     end
                     progress=progress+0.5*(speed+newSpeed)*dt;
                     speed=newSpeed;
