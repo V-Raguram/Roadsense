@@ -14,6 +14,7 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
     properties
         PlanStep (1,1) single = single(0.10)
         PlanHorizon (1,1) single = single(6.0)
+        LateralTransitionDistance (1,1) single = single(10.0)
         LateralOffsets (:,1) single = single([-4;-2;-1;0;1;2;4])
         SpeedScales (:,1) single = single([0.70;1.00;1.15])
         Wheelbase (1,1) single = single(2.8)
@@ -214,9 +215,17 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                 initialAcceleration=0;
             end
             speed=initialSpeed; acceleration=initialAcceleration; progress=0;
-            transitionDistance=max(10,2.5*max(initialSpeed,double(behaviour.TargetSpeed)));
+            transitionDistance=max(double(object.LateralTransitionDistance), ...
+                2.5*max(initialSpeed,double(behaviour.TargetSpeed)));
             segmentIndex=2; cumulativeStart=0;
-            routeSpeed=double(reference.RecommendedSpeeds(1));
+            [initialBasePosition,initialBaseYaw,routeSpeed,segmentIndex,cumulativeStart]= ...
+                object.referenceAtForward(reference,nref,0,segmentIndex,cumulativeStart);
+            initialNormal=[-sin(initialBaseYaw) cos(initialBaseYaw)];
+            % The reference is expressed in the current ego frame. Preserve
+            % the ego's present lateral displacement at the first candidate
+            % point, then blend toward the requested route-relative offset.
+            % This makes consecutive avoidance plans spatially continuous.
+            initialLateral=dot(-initialBasePosition,initialNormal);
             routeDifferences=diff(double(reference.Positions(1:nref,:)),1,1);
             routeLength=sum(vecnorm(routeDifferences,2,2));
             terminalBuffer=0.15;
@@ -251,7 +260,8 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                     object.referenceAtForward(reference,nref,progress,segmentIndex,cumulativeStart);
                 u=min(max(progress/transitionDistance,0),1);
                 blend=10*u^3-15*u^4+6*u^5;
-                lateral=double(targetOffset)*blend;
+                lateral=initialLateral+ ...
+                    (double(targetOffset)-initialLateral)*blend;
                 candidate.Position(point,:)=single(basePosition+ ...
                     lateral*[-sin(baseYaw) cos(baseYaw)]);
                 candidate.Speed(point)=single(speed);

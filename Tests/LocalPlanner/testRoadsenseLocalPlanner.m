@@ -62,6 +62,17 @@ classdef testRoadsenseLocalPlanner < matlab.unittest.TestCase
             testCase.verifyEqual(sign(directedY(end)),-firstSide);
         end
 
+        function displacedEgoKeepsReplanSpatiallyContinuous(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
+            inputs{1}.Position(2)=inputs{1}.Position(2)+single(1.5);
+            inputs{5}.Mode=RoadsenseTypes.BehaviourMode.AvoidObstacle;
+            inputs{5}.TargetSpeed=single(3);
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{16}); testCase.verifyFalse(out{15});
+            testCase.verifyLessThan(norm(double(out{5}(1,:)-inputs{1}.Position(1:2).')),0.30);
+            testCase.verifyGreaterThan(max(abs(double(out{5}(:,2)-inputs{1}.Position(2)))),1.0);
+        end
+
         function avoidanceSideIsAwayFromClosingVehicle(testCase)
             [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
             inputs{5}.Mode=RoadsenseTypes.BehaviourMode.AvoidObstacle;

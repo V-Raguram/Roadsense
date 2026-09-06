@@ -120,16 +120,16 @@ switch id
            makePlan(504,6,[1.8 0.6 1.2],[0 20],[30 1.5 0;100 1.5 0])];
         if time>=5.5 && time<=11; eventMask=bitor(eventMask,uint16(16)); end
     case 6 % Temporary confidence demo (not part of the five-scenario benchmark)
-        name="Temporary 3D Confidence Demo"; duration=12;
+        name="Temporary 3D Obstacle-Avoidance Demo"; duration=16;
         x=(0:0.25:12).'; y=0.10*sin(pi*x/12); route=[x y zeros(size(x))];
-        speeds=single(2.0*ones(size(x)));
-        s.DesiredSpeed=single(2.0); s.SpeedLimit=single(3.0);
-        s.GoalRadius=single(3.00); s.Friction=single(0.82);
+        speeds=single(3.0*ones(size(x)));
+        s.DesiredSpeed=single(3.0); s.SpeedLimit=single(4.0);
+        s.GoalRadius=single(5.80); s.Friction=single(0.82);
         s.InitialYaw=atan2(y(2)-y(1),x(2)-x(1));
-        % This confidence route deliberately contains no traffic actors. It
-        % proves the complete stack can initialize, plan, control, move and
-        % stop at a goal before obstacle scenarios are tuned independently.
-        p=repmat(emptyPlan(),0,1);
+        % A static roadworks barrier intrudes into the nominal center path.
+        % It is perceived through the complete sensor/fusion chain, forcing
+        % the behaviour planner and local planner to select a lateral bypass.
+        p=makePlan(610,10,[1.6 1.0 1.4],[0 16],[7.0 -0.5 0;7.0 -0.5 0]);
         eventMask=bitor(uint16(1),uint16(2));
     otherwise
         route=zeros(0,3); speeds=zeros(0,1); s.InitialPosition=[0;0;0];

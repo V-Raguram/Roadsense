@@ -75,10 +75,14 @@ startRoadsenseConfidenceDemo
 ```
 
 The launcher replays a previously verified full-stack result immediately when
-one exists. To execute the complete closed-loop Simulink model again before
-the real-time replay, use `startRoadsenseConfidenceDemo(RunModel=true)`. The
-temporary scenario is separate from the five required benchmark scenarios and
-does not replace RoadRunner validation.
+one exists. Its temporary scene contains a fused roadworks obstacle that forces
+the behaviour planner into obstacle-avoidance mode and the local planner onto a
+lateral bypass. The viewer displays the selected plan, driven trail, live mode,
+clearance and goal state. To execute the complete closed-loop Simulink model
+again before the real-time replay, use
+`startRoadsenseConfidenceDemo(RunModel=true)`. The temporary scenario is
+separate from the five required benchmark scenarios and does not replace
+RoadRunner validation.
 
 This opens the presentation-ready closed-loop harness and fits the organized
 environment, autonomy, plant, and evaluator regions to the Simulink window.

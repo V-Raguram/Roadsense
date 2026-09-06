@@ -553,6 +553,8 @@ parameters.RsMaxReferencePoints = parameter(uint16(limits.MaxReferencePoints),"u
 parameters.RsMaxScenarioActors = parameter(uint16(limits.MaxScenarioActors),"uint16","Fixed scenario truth-actor capacity.");
 parameters.RsPlanStep = parameter(single(0.10),"single","Local trajectory time interval.","s");
 parameters.RsPlanHorizon = parameter(single(6.0),"single","Local trajectory horizon.","s");
+parameters.RsPlannerLateralTransitionDistance = parameter(single(10.0),"single", ...
+    "Distance used to blend from the route center to a sampled avoidance offset.","m");
 parameters.RsPlannerLateralOffsets = parameter(single([-4;-2;-1;0;1;2;4]),"single","Sampled lateral route offsets.","m");
 parameters.RsPlannerSpeedScales = parameter(single([0.70;1.00;1.15]),"single","Sampled fractions of behaviour target speed.");
 parameters.RsPlannerWheelbase = parameter(single(2.8),"single","Bicycle-model wheelbase.","m");
