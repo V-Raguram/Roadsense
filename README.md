@@ -49,6 +49,9 @@ profiles and selects a safety-first recommendation without changing evaluator
 thresholds.
 `Models/PresentationDashboard` creates judge-facing PNG dashboards and annotated
 MP4 replays from truth-isolated validation evidence.
+`Models/PresentationDashboard/runRoadsense3DReplay.m` replays the actual
+closed-loop ego trajectory in the Unreal-based Simulink 3D Animation viewer
+using a native SUV mesh, terrain, road surface, lighting, and brake lamps.
 `Models/SubmissionPackaging` creates the evidence-backed technical report and
 refuses to assemble a final delivery unless all five scenarios are accepted.
 Run the
@@ -56,6 +59,12 @@ following from the repository root:
 
 ```matlab
 openRoadsense
+```
+
+For a true 3D vehicle replay after (or while) the autonomous stack runs, use:
+
+```matlab
+runRoadsense3DReplay(ScenarioID=1,StopTime=32)
 ```
 
 This opens the presentation-ready closed-loop harness and fits the organized
