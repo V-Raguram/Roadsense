@@ -115,8 +115,14 @@ classdef RoadsenseTrajectoryControllerSystem < matlab.System
                     object.SpeedErrorIntegral=single(candidateIntegral);
                 end
 
-                emergencyStop=logical(plan.EmergencyFallback || ...
-                    plannerStatus.EmergencyRequested || plannerCode==uint8(6));
+                % Emergency authority belongs to the status record, which
+                % carries the plan identifier and the local planner decision.
+                % The plan and status traverse independent rate transitions;
+                % an old plan's EmergencyFallback flag may coexist briefly
+                % with a newer safe status.  Using that stale field caused
+                % unnecessary full-brake pulses in the closed-loop harness.
+                emergencyStop=logical(plannerStatus.EmergencyRequested || ...
+                    plannerCode==uint8(6));
                 if emergencyStop
                     accelerationCommand=-object.MaximumDeceleration;
                     accelerationSaturated=true;

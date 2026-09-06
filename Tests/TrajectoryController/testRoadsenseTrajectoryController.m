@@ -57,6 +57,16 @@ classdef testRoadsenseTrajectoryController < matlab.unittest.TestCase
             testCase.verifyEqual(out{7},single(1)); testCase.verifyEqual(out{6},single(0));
         end
 
+        function staleFallbackFlagDoesNotOverrideCurrentSafePlannerStatus(testCase)
+            [ego,plan,status]=createSyntheticRoadsenseControllerInputs("staleFallback");
+            controller=RoadsenseTrajectoryControllerSystem; [out{1:22}]=controller(ego,plan,status);
+            testCase.verifyTrue(plan.EmergencyFallback);
+            testCase.verifyFalse(status.EmergencyRequested);
+            testCase.verifyFalse(out{9});
+            testCase.verifyTrue(out{10});
+            testCase.verifyGreaterThanOrEqual(out{5},single(-0.10));
+        end
+
         function expiredOrInvalidPlanFailsSafe(testCase)
             scenarios=["expired","invalid"];
             for index=1:numel(scenarios)

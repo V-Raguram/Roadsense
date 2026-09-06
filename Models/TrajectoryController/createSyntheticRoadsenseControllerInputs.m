@@ -2,7 +2,7 @@ function [ego,plan,status]=createSyntheticRoadsenseControllerInputs(scenario)
 %CREATESYNTHETICROADSENSECONTROLLERINPUTS Build repeatable tracking cases.
 arguments
     scenario (1,1) string {mustBeMember(scenario,["aligned","offset", ...
-        "curved","overspeed","emergency","expired","invalid"])}="aligned"
+        "curved","overspeed","emergency","staleFallback","expired","invalid"])}="aligned"
 end
 
 plannerScenario="cruise";
@@ -36,6 +36,10 @@ switch scenario
         plan.EmergencyFallback=true; plan.Speeds(:)=single(0);
         status.Code=RoadsenseTypes.PlannerCode.EmergencyFallback;
         status.EmergencyRequested=true;
+    case "staleFallback"
+        % Prior fallback plan held for a control tick; current planner status
+        % authorizes normal motion and therefore retains emergency=false.
+        plan.EmergencyFallback=true;
     case "expired"
         ego.Timestamp=plan.Timestamp+double(plan.TimeFromStart(plan.Count))+1;
     case "invalid"

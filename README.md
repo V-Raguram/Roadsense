@@ -4,9 +4,9 @@ Roadsense is an uncertainty-aware perception and path-planning stack for
 autonomous driving on unstructured Indian roads. The implementation targets
 MATLAB and Simulink R2025b with RoadRunner scenario co-simulation.
 
-Development is intentionally component-by-component. Every component has a
-companion document under `docs/blocks` containing its purpose, interface,
-algorithm, implementation details, tests, expected results, and limitations.
+Development is intentionally component-by-component. The repository contains
+the executable models, MATLAB implementation, test suites, scenario assets,
+and shared data dictionary needed to reproduce the stack.
 
 ## Current components
 
@@ -150,6 +150,4 @@ Tests/ValidationRunner/ Metric extraction, reporting, and selective logging test
 Tests/ScenarioTuning/ Profile rollback, ranking, timing, and artifact tests
 Tests/PresentationDashboard/ Dashboard, video, and evidence-loading tests
 Tests/SubmissionPackaging/ Report generation and five-scenario acceptance gate
-docs/blocks/19_submission_packaging.md Final-delivery contract and safeguards
-docs/blocks/          Human-readable component documentation
 ```

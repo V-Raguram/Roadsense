@@ -48,8 +48,15 @@ addRate(modelName,"Camera Objects 10 to 20 Hz","RsTsFusion",[405 105 500 135]);
 addRate(modelName,"LiDAR Objects 10 to 20 Hz","RsTsFusion",[405 220 500 250]);
 addRate(modelName,"Tracks 20 to 10 Hz","RsTsPlanning",[790 125 870 155]);
 addRate(modelName,"Ego 50 to 10 Hz","RsTsPlanning",[1040 570 1130 600]);
-addRate(modelName,"Plan 10 to 50 Hz","RsTsControl",[1830 220 1910 250]);
-addRate(modelName,"Planner Status 10 to 50 Hz","RsTsControl",[1830 290 1910 320]);
+% LocalPlan and PlannerStatus form one decision transaction. Transfer them
+% together so a controller tick cannot combine different planner updates.
+planBundle=modelName+"/Atomic Plan and Status Bundle";
+add_block("simulink/Signal Routing/Bus Creator",planBundle,"Position",[1810 205 1830 275], ...
+    "Inputs","2","BackgroundColor","[0.98 0.93 0.72]");
+addRate(modelName,"Atomic Plan and Status 10 to 50 Hz","RsTsControl",[1860 225 1960 255]);
+planSelector=modelName+"/Atomic Plan and Status Selector";
+add_block("simulink/Signal Routing/Bus Selector",planSelector,"Position",[1990 205 2020 275], ...
+    "OutputSignals","LocalPlan,PlannerStatus","BackgroundColor","[0.98 0.93 0.72]");
 addRate(modelName,"Map 10 to 50 Hz","RsTsControl",[1885 440 1975 470]);
 addRate(modelName,"Tracks 20 to 50 Hz","RsTsControl",[1885 490 1975 520]);
 % Fusion (20 Hz) and control (50 Hz) are both derived from the 100 Hz base
@@ -108,11 +115,15 @@ wire(modelName,"Motion Prediction/1","Local Planner/4","Predictions");
 wire(modelName,"Behaviour Planner/1","Local Planner/5","BehaviourCommand");
 wire(modelName,"ReferencePath/1","Reference Ingress to 10 Hz/1","ReferencePath");
 wire(modelName,"Reference Ingress to 10 Hz/1","Local Planner/6","");
-wire(modelName,"Local Planner/1","Plan 10 to 50 Hz/1","LocalPlan");
-wire(modelName,"Local Planner/2","Planner Status 10 to 50 Hz/1","PlannerStatus");
+wire(modelName,"Local Planner/1","Atomic Plan and Status Bundle/1","LocalPlan");
+wire(modelName,"Local Planner/2","Atomic Plan and Status Bundle/2","PlannerStatus");
+wire(modelName,"Atomic Plan and Status Bundle/1", ...
+    "Atomic Plan and Status 10 to 50 Hz/1","AtomicPlanStatus");
+wire(modelName,"Atomic Plan and Status 10 to 50 Hz/1", ...
+    "Atomic Plan and Status Selector/1","");
 wire(modelName,"Vehicle Dynamics/1","Trajectory Controller/1","EgoState");
-wire(modelName,"Plan 10 to 50 Hz/1","Trajectory Controller/2","ControlPlan");
-wire(modelName,"Planner Status 10 to 50 Hz/1","Trajectory Controller/3","ControlPlannerStatus");
+wire(modelName,"Atomic Plan and Status Selector/1","Trajectory Controller/2","");
+wire(modelName,"Atomic Plan and Status Selector/2","Trajectory Controller/3","");
 
 % Safety-only rate conversions and independent command authority.
 wire(modelName,"Semantic Map Fusion/1","Map 10 to 50 Hz/1","SemanticGrid");
@@ -122,7 +133,7 @@ wire(modelName,"Vehicle Dynamics/1","Safety Supervisor/1","EgoState");
 wire(modelName,"Map 10 to 50 Hz/1","Safety Supervisor/2","SafetyMap");
 wire(modelName,"Tracks 20 to 50 Hz/1","Safety Supervisor/3","SafetyTracks");
 wire(modelName,"Behaviour 10 to 50 Hz/1","Safety Supervisor/4","SafetyBehaviour");
-wire(modelName,"Planner Status 10 to 50 Hz/1","Safety Supervisor/5","SafetyPlannerStatus");
+wire(modelName,"Atomic Plan and Status Selector/2","Safety Supervisor/5","");
 wire(modelName,"Trajectory Controller/2","Safety Supervisor/6","TrackingStatus");
 wire(modelName,"Vehicle Dynamics/2","Safety Supervisor/7","DynamicsStatus");
 wire(modelName,"Trajectory Controller/1","Safety Supervisor/8","NominalControl");
@@ -150,8 +161,8 @@ set_param(monitor,"System","RoadsenseIntegrationMonitorSystem");
 monitorSources=["Vehicle Dynamics/1","Image Semantics 10 to 50 Hz/1", ...
     "LiDAR Grid 10 to 50 Hz/1","Tracks 20 to 50 Hz/1", ...
     "Predictions 10 to 50 Hz/1","Map 10 to 50 Hz/1", ...
-    "Behaviour 10 to 50 Hz/1","Plan 10 to 50 Hz/1", ...
-    "Planner Status 10 to 50 Hz/1","Trajectory Controller/1", ...
+    "Behaviour 10 to 50 Hz/1","Atomic Plan and Status Selector/1", ...
+    "Atomic Plan and Status Selector/2","Trajectory Controller/1", ...
     "Trajectory Controller/2","Safety Supervisor/2", ...
     "Safety Supervisor/1","Vehicle Dynamics/2","Route 10 to 50 Hz/1"];
 for port=1:numel(monitorSources)
@@ -178,15 +189,20 @@ outputTypes=["Bus: RsEgoStateBus","Bus: RsSemanticGridBus", ...
     "Bus: RsTrackingStatusBus","Bus: RsVehicleDynamicsStatusBus", ...
     "Bus: RsBehaviourCommandBus"];
 outputSources=["Vehicle Dynamics/1","Semantic Map Fusion/1","Sensor Fusion/1", ...
-    "Local Planner/1","Safety Supervisor/1","Safety Supervisor/2", ...
-    "Integration Status Bus/1","Planner Status 10 to 50 Hz/1", ...
+    "Atomic Plan and Status Selector/1","Safety Supervisor/1","Safety Supervisor/2", ...
+    "Integration Status Bus/1","Atomic Plan and Status Selector/2", ...
     "Trajectory Controller/2","Vehicle Dynamics/2","Behaviour 10 to 50 Hz/1"];
 for index=1:numel(outputNames)
     y=90+(index-1)*105;
     add_block("simulink/Ports & Subsystems/Out1",modelName+"/"+outputNames(index), ...
         "Position",[2690 y 2720 y+20],"Port",string(index), ...
         "OutDataTypeStr",outputTypes(index));
-    wire(modelName,outputSources(index),outputNames(index)+"/1",outputNames(index));
+    signalName=outputNames(index);
+    if startsWith(outputSources(index),"Atomic Plan and Status Selector")
+        % Bus Selector output labels are fixed by the selected bus element.
+        signalName="";
+    end
+    wire(modelName,outputSources(index),outputNames(index)+"/1",signalName);
 end
 
 annotation=Simulink.Annotation(modelName,"Roadsense Closed-Loop Integration"+newline+ ...
