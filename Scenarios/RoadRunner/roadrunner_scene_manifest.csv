@@ -1,0 +1,3 @@
+ScenarioID,Name,RoadRunnerIntent,HDMapFile
+1,Unmarked Village Road,wide bidirectional lane without centre markings,C:\Users\ragur\Documents\SIH_MPC\Scenarios\RoadRunner\roadsense_unmarked_village.rrhd
+2,Uncontrolled Urban Intersection,crossing bidirectional roads without signal control,C:\Users\ragur\Documents\SIH_MPC\Scenarios\RoadRunner\roadsense_uncontrolled_urban_intersection.rrhd

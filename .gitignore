@@ -1,0 +1,20 @@
+# MATLAB and Simulink generated caches
+slprj/
+**/slprj/
+*.slxc
+*.autosave
+*.asv
+
+# Runtime output that should not be committed by default
+*.log
+
+# Local validation evidence and submission exports (regenerated on demand)
+Results/
+
+# This repository is intentionally source-only.  The baseline segmentation
+# network is optional at run time and exceeds GitHub's normal file-size limit;
+# downloadRoadsenseSemanticBaseline obtains it locally when needed.
+Data/Networks/
+
+# Human-readable working notes are kept out of the source-only remote.
+docs/
