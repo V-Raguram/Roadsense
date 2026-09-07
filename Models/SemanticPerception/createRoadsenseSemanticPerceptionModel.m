@@ -99,6 +99,7 @@ annotation = Simulink.Annotation(modelName, ...
     "Real neural inference; no actor ground truth");
 annotation.Position = [210 30 480 65];
 
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath);
 clear cleanup
 close_system(modelName,0);

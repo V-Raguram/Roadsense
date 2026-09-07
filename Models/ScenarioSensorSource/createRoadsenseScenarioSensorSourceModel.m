@@ -104,6 +104,7 @@ legendNote=Simulink.Annotation(modelName,sprintf([ ...
     'BLUE  camera image\nGREEN  LiDAR cloud\nORANGE  radar detections\nGREY  source health']));
 legendNote.Position=[790 1245 1015 1345]; legendNote.FontSize=9;
 set_param(modelName,"Location",[70 35 1510 930]);
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

@@ -73,6 +73,7 @@ annotation=Simulink.Annotation(modelName,"Roadsense Vehicle Dynamics"+newline+ .
     "actuator lag -> nonlinear front/rear tyre slip -> friction-circle forces"+newline+ ...
     "dynamic bicycle integration with low-speed stabilization, grade and bank");
 annotation.Position=[150 15 755 70];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

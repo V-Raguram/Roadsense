@@ -97,6 +97,7 @@ annotation = Simulink.Annotation(modelName, ...
     "SMRF ground and surface analysis with geometric obstacle clustering");
 annotation.Position = [205 25 560 60];
 
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath);
 clear cleanup
 close_system(modelName,0);

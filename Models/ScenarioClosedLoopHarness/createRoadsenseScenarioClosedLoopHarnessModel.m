@@ -109,6 +109,7 @@ legendNote=Simulink.Annotation(modelName,sprintf([ ...
     'BLUE  simulated environment\nGREEN  autonomous driving stack\nGREY  independent evaluation']));
 legendNote.Position=[1350 1010 1570 1105]; legendNote.FontSize=9;
 set_param(modelName,"Location",[45 30 1660 970]);
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

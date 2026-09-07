@@ -139,6 +139,7 @@ annotation=Simulink.Annotation(modelName,"Roadsense Scenario Adapters"+newline+ 
     "scenario initialization + road conditions + one-tick reset sequencing");
 annotation.Position=[590 1210 1320 1280];
 set_param(modelName,"Location",[20 40 1850 1000]);
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

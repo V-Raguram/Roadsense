@@ -95,6 +95,7 @@ annotation=Simulink.Annotation(modelName,"Roadsense Behaviour Planner"+newline+ 
     "Map/track hazard assessment -> Stateflow priority and hysteresis -> bounded command"+newline+ ...
     "invalid | emergency | stop | yield | avoid | follow | creep | cautious | cruise");
 annotation.Position=[390 15 1030 62];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

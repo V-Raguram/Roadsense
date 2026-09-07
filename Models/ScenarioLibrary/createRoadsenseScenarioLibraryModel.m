@@ -55,6 +55,7 @@ interfaceNote=Simulink.Annotation(modelName,sprintf([ ...
     '64 actors  |  256 route points  |  10 Hz']));
 interfaceNote.Position=[315 555 670 615]; interfaceNote.FontSize=10;
 set_param(modelName,"Location",[100 80 1370 820]);
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

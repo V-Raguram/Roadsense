@@ -104,6 +104,7 @@ annotation=Simulink.Annotation(modelName,"Roadsense Adaptive Local Planner"+newl
     "route-relative candidate sampling -> static and multimodal dynamic safety -> feasibility and cost"+newline+ ...
     "always emits a bounded minimum-risk braking fallback when no nominal candidate survives");
 annotation.Position=[160 15 780 65];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

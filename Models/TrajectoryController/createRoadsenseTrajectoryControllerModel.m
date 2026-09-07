@@ -71,6 +71,7 @@ annotation=Simulink.Annotation(modelName,"Roadsense Trajectory Controller"+newli
     "time/spatial reference selection -> curvature feed-forward + Stanley feedback"+newline+ ...
     "acceleration feed-forward + anti-windup PI -> actuator and slew limits -> fail-safe brake");
 annotation.Position=[150 20 760 75];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

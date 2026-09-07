@@ -65,13 +65,23 @@ classdef testRoadsenseClosedLoopIntegration < matlab.unittest.TestCase
                 "Roadsense_SafetySupervisor","Roadsense_VehicleDynamics"]);
             testCase.verifyEqual(referenceNames,expected.');
             transitions=find_system(modelName,"SearchDepth",1,"BlockType","RateTransition");
-            testCase.verifyNumElements(transitions,21);
+            testCase.verifyNumElements(transitions,20);
             testCase.verifyEqual(get_param(modelName+"/Tracks 20 to 50 Hz", ...
                 "Deterministic"),'off');
             testCase.verifyEqual(get_param(modelName+"/One Control Tick Actuator Delay", ...
                 "SampleTime"),'RsTsControl');
             testCase.verifyEqual(get_param(modelName+"/IntegrationStatus", ...
                 "OutDataTypeStr"),'Bus: RsIntegrationStatusBus');
+            gotos=find_system(modelName,"SearchDepth",1,"BlockType","Goto");
+            froms=find_system(modelName,"SearchDepth",1,"BlockType","From");
+            testCase.verifyNumElements(gotos,16);
+            testCase.verifyNumElements(froms,26);
+            testCase.verifyEqual(get_param(modelName+"/Output Source EgoState", ...
+                "GotoTag"),'RsTapEgoState');
+            screenColour=sscanf(get_param(modelName,"ScreenColor"), ...
+                '[%f, %f, %f]').';
+            testCase.verifyEqual(screenColour,[0.98 0.98 0.98], ...
+                "AbsTol",1e-12);
             set_param(modelName,"SimulationCommand","update");
             sim(modelName,"StopTime","0.02");
             clear cleanup; close_system(modelName,0);

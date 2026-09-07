@@ -114,6 +114,7 @@ add_line(modelName,"Safety Status Bus/1","SafetyStatus/1","autorouting","on");
 annotation=Simulink.Annotation(modelName,"Roadsense Independent Safety Supervisor"+newline+ ...
     "health + freshness + collision + stability assessment -> Stateflow latch -> final command gate");
 annotation.Position=[335 15 1060 55];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath); clear cleanup; close_system(modelName,0);
 fprintf("Generated %s\n",modelPath);
 end

@@ -68,6 +68,7 @@ annotation = Simulink.Annotation(modelName, ...
     "continue | stop | left deviation | right deviation");
 annotation.Position = [190 25 600 70];
 
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath);
 clear cleanup
 close_system(modelName,0);

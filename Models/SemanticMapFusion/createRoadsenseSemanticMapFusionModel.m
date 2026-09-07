@@ -79,6 +79,7 @@ annotation = Simulink.Annotation(modelName, ...
     "Ground-projected camera semantics + LiDAR terrain + current and predicted objects" + newline + ...
     "Unknown space receives a conservative cost instead of being assumed free");
 annotation.Position = [175 25 700 72];
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath);
 clear cleanup
 close_system(modelName,0);

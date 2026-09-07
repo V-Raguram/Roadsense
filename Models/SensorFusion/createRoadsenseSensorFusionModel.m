@@ -86,6 +86,7 @@ annotation = Simulink.Annotation(modelName, ...
     "Tentative tracks remain exposed for conservative collision checking");
 annotation.Position = [170 25 650 72];
 
+applyRoadsenseModelStyle(modelName);
 save_system(modelName,modelPath);
 clear cleanup
 close_system(modelName,0);
