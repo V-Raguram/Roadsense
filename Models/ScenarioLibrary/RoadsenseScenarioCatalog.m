@@ -57,11 +57,11 @@ p=repmat(emptyPlan(),0,1); eventMask=uint16(1); name="Unsupported"; duration=0;
 switch id
     case 1 % Unmarked village road
         name="Unmarked Village Road"; duration=28;
-        % The village route terminates just beyond the oncoming-vehicle
-        % conflict zone.  Sub-metre samples preserve a dense reference while
-        % making the goal represent safe passage rather than an arbitrary
-        % empty-road tail.
-        x=(0:0.6:18).'; y=1.4*sin(x/24); route=[x y zeros(size(x))];
+        % Continue beyond the cyclist/oncoming-vehicle encounter so success
+        % proves that the ego actually negotiates the conflict instead of
+        % receiving credit at its boundary. Sub-metre samples preserve a
+        % dense reference for the unmarked curved road.
+        x=(0:0.6:30).'; y=1.4*sin(x/24); route=[x y zeros(size(x))];
         speeds=6-1.5*(abs(y)>1); s.InitialYaw=atan2(y(2)-y(1),1);
         s.GoalRadius=single(3);
         s.OccludedArea=true; s.Friction=0.62; eventMask=bitor(uint16(1),uint16(2+64));

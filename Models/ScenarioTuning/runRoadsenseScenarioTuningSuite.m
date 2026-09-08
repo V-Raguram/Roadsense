@@ -23,8 +23,6 @@ if any(~ismember(options.Profiles,validProfiles))
 end
 createRoadsenseDataDictionary(fullfile(root,"Data","Roadsense_Data.sldd"));
 deploymentCleanup=onCleanup(@() activateRoadsenseDeploymentProfile(string(root)));
-previousMode=setRoadsenseSemanticInferenceMode(options.InferenceMode);
-modeCleanup=onCleanup(@() setRoadsenseSemanticInferenceMode(previousMode));
 runs=cell(1,numel(options.Profiles)); scores=cell(1,numel(options.Profiles));
 suiteTimer=tic;
 for index=1:numel(options.Profiles)
@@ -37,7 +35,7 @@ for index=1:numel(options.Profiles)
         UseFastRestart=options.UseFastRestart, ...
         GenerateFigures=options.GenerateValidationFigures,SaveTimelines=true, ...
         ContinueOnError=true,ShowProgress=options.ShowProgress, ...
-        RefreshDataDictionary=false);
+        RefreshDataDictionary=false,InferenceMode=options.InferenceMode);
     scores{index}=scoreRoadsenseTuningMetrics(runs{index}.Summary,profile.Name);
     clear rollback;
 end
@@ -52,7 +50,6 @@ report=struct("Comparison",comparison,"Runs",{runs}, ...
     "ReportPath",reportPath,"FigurePath",figurePath, ...
     "OutputDirectory",options.OutputDirectory);
 save(fullfile(options.OutputDirectory,"tuning_results.mat"),"report","-v7.3");
-clear modeCleanup; setRoadsenseSemanticInferenceMode(previousMode);
 clear deploymentCleanup; activateRoadsenseDeploymentProfile(string(root));
 fprintf("Recommended Roadsense profile: %s\n",recommendedProfile);
 end

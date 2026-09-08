@@ -244,6 +244,14 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                     terminalSpeed=sqrt(2*terminalDeceleration*remainingDistance);
                     targetSpeed=min(targetSpeed,terminalSpeed);
                     desiredAcceleration=(targetSpeed-speed)/1.5;
+                    if terminalSpeed<speed
+                        % A finite route is a hard longitudinal boundary.
+                        % Request the braking needed to respect its stopping
+                        % envelope; the jerk limiter below still makes the
+                        % command continuous from the current acceleration.
+                        desiredAcceleration=min(desiredAcceleration, ...
+                            (terminalSpeed-speed)/dt);
+                    end
                     desiredAcceleration=min(max(desiredAcceleration,minimumAcceleration),maximumAcceleration);
                     maximumDelta=double(object.MaximumJerk)*dt;
                     acceleration=min(max(desiredAcceleration,acceleration-maximumDelta), ...
@@ -251,7 +259,10 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                     newSpeed=max(0,speed+acceleration*dt);
                     if targetSpeed<=0.01 && newSpeed<0.15
                         newSpeed=0;
-                        acceleration=min(0,acceleration+maximumDelta);
+                        % Acceleration was already changed by at most one
+                        % jerk increment above. Do not apply a second update
+                        % while snapping the tiny terminal speed to zero.
+                        acceleration=min(0,acceleration);
                     end
                     progress=progress+0.5*(speed+newSpeed)*dt;
                     speed=newSpeed;
@@ -507,6 +518,17 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                 segmentLength=norm(segment);
                 if cumulativeStart+segmentLength>=distance || segmentLength<=1e-6
                     break
+                end
+                if segmentIndex==nref
+                    % Keep the interpolation state anchored to the final
+                    % segment when forward progress overshoots the finite
+                    % route. Advancing past nref made the next call reuse an
+                    % end-of-route cumulative distance with the last segment,
+                    % producing an artificial backwards/forwards oscillation.
+                    position=double(reference.Positions(nref,:));
+                    yaw=double(reference.Yaws(nref));
+                    recommendedSpeed=double(reference.RecommendedSpeeds(nref));
+                    return
                 end
                 cumulativeStart=cumulativeStart+segmentLength;
                 segmentIndex=segmentIndex+1;

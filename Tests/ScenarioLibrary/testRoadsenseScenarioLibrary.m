@@ -73,13 +73,17 @@ classdef testRoadsenseScenarioLibrary < matlab.unittest.TestCase
 
         function buildsNativeAndRoadRunnerAssets(testCase)
             native=createRoadsenseDrivingScenarios(); rr=createRoadsenseRoadRunnerHDMaps();
-            testCase.verifyEqual(height(native),5); testCase.verifyEqual(height(rr),2);
+            testCase.verifyEqual(height(native),5); testCase.verifyEqual(height(rr),5);
             testCase.verifyTrue(all(isfile(native.AssetFile))); testCase.verifyTrue(all(isfile(rr.HDMapFile)));
+            testCase.verifyEqual(numel(unique(rr.SceneFile)),5);
+            testCase.verifyEqual(numel(unique(rr.ScenarioFile)),5);
             loaded=load(native.AssetFile(4),"scenario","metadata");
             testCase.verifyClass(loaded.scenario,"drivingScenario");
             testCase.verifyEqual(loaded.metadata.ScenarioID,uint16(4));
             map=roadrunnerHDMap; read(map,rr.HDMapFile(2));
             testCase.verifyGreaterThanOrEqual(numel(map.Lanes),2);
+            mergeMap=roadrunnerHDMap; read(mergeMap,rr.HDMapFile(3));
+            testCase.verifyGreaterThanOrEqual(numel(mergeMap.Lanes),3);
         end
 
         function generatedModelIsReadableTypedAndExecutable(testCase)
@@ -97,7 +101,8 @@ classdef testRoadsenseScenarioLibrary < matlab.unittest.TestCase
             end
             annotations=find_system(modelName,"FindAll","on","Type","annotation");
             testCase.verifyGreaterThanOrEqual(numel(annotations),3);
-            testCase.verifyEqual(get_param(modelName,"ScreenColor"),'white');
+            canvas=sscanf(get_param(modelName,"ScreenColor"),'[%f, %f, %f]');
+            testCase.verifyEqual(canvas,[0.98;0.98;0.98],"AbsTol",1e-12);
             sim(modelName,"StopTime","0.1");
             clear cleanup; close_system(modelName,0);
         end

@@ -7,11 +7,11 @@ configuration=struct;
 configuration.ScenarioIDs=1:5;
 configuration.ScenarioNames=["Unmarked Village Road", ...
     "Uncontrolled Urban Intersection","Highway Merge With Slow Vehicles", ...
-    "Dense Market Mixed Traffic","Sudden Cattle Crossing", ...
-    "Temporary 3D Obstacle-Avoidance Demo"];
+    "Dense Market Mixed Traffic","Sudden Cattle Crossing"];
 configuration.CompletionBuffer=0.20;
 configuration.OutputDirectory=fullfile(root,"Results","ValidationRunner");
 configuration.UseFastRestart=false;
+configuration.InferenceMode="syntheticColor";
 configuration.GenerateFigures=true;
 configuration.SaveTimelines=true;
 configuration.ContinueOnError=true;

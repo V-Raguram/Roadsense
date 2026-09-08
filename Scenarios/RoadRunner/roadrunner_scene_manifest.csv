@@ -1,3 +1,6 @@
-ScenarioID,Name,RoadRunnerIntent,HDMapFile
-1,Unmarked Village Road,wide bidirectional lane without centre markings,C:\Users\ragur\Documents\SIH_MPC\Scenarios\RoadRunner\roadsense_unmarked_village.rrhd
-2,Uncontrolled Urban Intersection,crossing bidirectional roads without signal control,C:\Users\ragur\Documents\SIH_MPC\Scenarios\RoadRunner\roadsense_uncontrolled_urban_intersection.rrhd
+ScenarioID,Name,RoadRunnerIntent,HDMapFile,SceneFile,ScenarioFile
+1,Unmarked Village Road,curved shared village road without centre markings,Scenarios/RoadRunner/roadsense_unmarked_village.rrhd,roadsense_unmarked_village.rrscene,roadsense_unmarked_village.rrscenario
+2,Uncontrolled Urban Intersection,wide crossing roads without signal control,Scenarios/RoadRunner/roadsense_uncontrolled_urban_intersection.rrhd,roadsense_uncontrolled_urban_intersection.rrscene,roadsense_uncontrolled_urban_intersection.rrscenario
+3,Highway Merge With Slow Vehicles,two-lane highway with an informal converging merge ramp,Scenarios/RoadRunner/roadsense_highway_slow_vehicle_merge.rrhd,roadsense_highway_slow_vehicle_merge.rrscene,roadsense_highway_slow_vehicle_merge.rrscenario
+4,Dense Market Mixed Traffic,narrow shared market street for dense mixed traffic,Scenarios/RoadRunner/roadsense_dense_market_mixed_traffic.rrhd,roadsense_dense_market_mixed_traffic.rrscene,roadsense_dense_market_mixed_traffic.rrscenario
+5,Sudden Cattle Crossing,open rural road with sufficient sight distance for cattle response,Scenarios/RoadRunner/roadsense_sudden_cattle_crossing.rrhd,roadsense_sudden_cattle_crossing.rrscene,roadsense_sudden_cattle_crossing.rrscenario

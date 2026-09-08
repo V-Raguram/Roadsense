@@ -10,6 +10,8 @@ arguments
     options.ContinueOnError (1,1) logical = true
     options.ShowProgress (1,1) logical = true
     options.RefreshDataDictionary (1,1) logical = true
+    options.InferenceMode (1,1) string {mustBeMember(options.InferenceMode, ...
+        ["network","syntheticColor"])} = "syntheticColor"
 end
 componentDir=fileparts(mfilename("fullpath")); root=fileparts(fileparts(componentDir));
 addpath(genpath(fullfile(root,"Models"))); addpath(fullfile(root,"Data"));
@@ -23,6 +25,7 @@ if strlength(options.OutputDirectory)>0
 end
 configuration.ScenarioIDs=scenarioIDs;
 configuration.UseFastRestart=options.UseFastRestart;
+configuration.InferenceMode=options.InferenceMode;
 configuration.GenerateFigures=options.GenerateFigures;
 configuration.SaveTimelines=options.SaveTimelines;
 configuration.ContinueOnError=options.ContinueOnError;
@@ -36,6 +39,14 @@ modelPath=fullfile(root,"Models","ScenarioClosedLoopHarness", ...
 if ~isfile(modelPath); createRoadsenseScenarioClosedLoopHarnessModel(); end
 modelName="Roadsense_ScenarioClosedLoopHarness"; load_system(modelPath);
 modelCleanup=onCleanup(@() closeIfLoaded(modelName));
+% The built-in scenarios render a deterministic colour-coded camera stream.
+% Select its matching backend only in memory after loading the hierarchy;
+% this avoids rewriting the generated perception SLX for each qualification.
+semanticWasLoaded=bdIsLoaded("Roadsense_SemanticPerception");
+previousInferenceMode=setRoadsenseSemanticInferenceMode( ...
+    options.InferenceMode,Persist=false);
+inferenceCleanup=onCleanup(@() restoreInferenceMode( ...
+    previousInferenceMode,semanticWasLoaded));
 
 stopTimes=zeros(size(scenarioIDs));
 for index=1:numel(scenarioIDs)
@@ -107,6 +118,7 @@ report=struct("Summary",summary,"ScenarioResults",{results}, ...
     "Configuration",configuration,"SuiteWallTime",suiteWallTime, ...
     "ReportPath",reportPath,"OutputDirectory",string(configuration.OutputDirectory));
 close_system(modelName,0); clear modelCleanup;
+clear inferenceCleanup;
 fprintf("Validation artifacts: %s\n",configuration.OutputDirectory);
 fprintf("Scenario completion rate: %.1f%% | acceptance rate: %.1f%%\n", ...
     100*mean(summary.Completed),100*mean(summary.Pass));
@@ -143,4 +155,11 @@ end
 
 function closeIfLoaded(modelName)
 if bdIsLoaded(modelName); close_system(modelName,0); end
+end
+
+function restoreInferenceMode(mode,wasLoaded)
+setRoadsenseSemanticInferenceMode(mode,Persist=false);
+if ~wasLoaded && bdIsLoaded("Roadsense_SemanticPerception")
+    close_system("Roadsense_SemanticPerception",0);
+end
 end

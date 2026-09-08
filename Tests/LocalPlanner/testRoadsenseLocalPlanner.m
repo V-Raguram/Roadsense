@@ -99,6 +99,29 @@ classdef testRoadsenseLocalPlanner < matlab.unittest.TestCase
             testCase.verifyGreaterThanOrEqual(out{12},single(0));
         end
 
+        function finiteRouteTerminalStopRemainsJerkFeasible(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
+            inputs{1}.Velocity=single([3;0;0]);
+            inputs{1}.Acceleration=single([0;0;0]);
+            inputs{5}.TargetSpeed=single(4.5);
+            count=uint16(41); x=single(linspace(0,8,double(count)).');
+            inputs{6}.Count=count;
+            inputs{6}.Positions(:)=single(0);
+            inputs{6}.Positions(1:double(count),1)=x;
+            inputs{6}.Yaws(:)=single(0);
+            inputs{6}.RecommendedSpeeds(:)=single(0);
+            inputs{6}.RecommendedSpeeds(1:double(count))=single(4.5);
+            inputs{6}.ValidMask(:)=false;
+            inputs{6}.ValidMask(1:double(count))=true;
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{16});
+            testCase.verifyFalse(out{15});
+            testCase.verifyGreaterThan(out{14},uint16(0));
+            jerk=diff(double(out{8}))/0.1;
+            testCase.verifyLessThanOrEqual(max(abs(jerk)),2.501);
+            testCase.verifyLessThan(out{7}(end),single(0.15));
+        end
+
         function emergencyCommandAlwaysUsesFallback(testCase)
             [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("emergency");
             planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});

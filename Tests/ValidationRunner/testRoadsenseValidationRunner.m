@@ -19,6 +19,7 @@ classdef testRoadsenseValidationRunner < matlab.unittest.TestCase
             testCase.verifyNumElements(configuration.ScenarioNames,5);
             testCase.verifyEqual(configuration.ContractVersion,uint32(16));
             testCase.verifyFalse(configuration.UseFastRestart);
+            testCase.verifyEqual(configuration.InferenceMode,"syntheticColor");
         end
 
         function extractionPreservesAllAcceptanceMetrics(testCase)

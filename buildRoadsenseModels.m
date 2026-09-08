@@ -1,9 +1,9 @@
 function report=buildRoadsenseModels()
-%BUILDROADSENSEMODELS Regenerate and compile every non-RoadRunner model.
+%BUILDROADSENSEMODELS Regenerate and compile every Roadsense Simulink model.
 %   REPORT=BUILDROADSENSEMODELS rebuilds the component models in dependency
 %   order from their MATLAB generator files, applies the shared Roadsense
 %   presentation style, and runs a Simulink diagram update on each model.
-%   RoadRunner assets are intentionally outside this build.
+%   The final model is the RoadRunner actor-behavior co-simulation wrapper.
 
 project=setupRoadsense;
 generators=[ ...
@@ -21,7 +21,8 @@ generators=[ ...
     "createRoadsenseScenarioSensorSourceModel"; ...
     "createRoadsenseScenarioAdaptersModel"; ...
     "createRoadsenseClosedLoopIntegrationModel"; ...
-    "createRoadsenseScenarioClosedLoopHarnessModel"];
+    "createRoadsenseScenarioClosedLoopHarnessModel"; ...
+    "createRoadsenseRoadRunnerIntegrationModel"];
 
 modelNames=strings(size(generators));
 compileSeconds=zeros(size(generators));
@@ -55,7 +56,7 @@ disp(report(:,["Model","Passed","Seconds","Message"]));
 if ~all(passed)
     failed=join(generators(~passed),", ");
     error("Roadsense:ModelBuildFailed", ...
-        "The following non-RoadRunner model builds failed: %s",failed);
+        "The following Roadsense model builds failed: %s",failed);
 end
 
 fprintf("All %d Roadsense Simulink models regenerated and compiled from %s.\n", ...

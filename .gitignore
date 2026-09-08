@@ -18,3 +18,8 @@ Data/Networks/
 
 # Human-readable working notes are kept out of the source-only remote.
 docs/
+
+# Local RoadRunner project contains a large copy of MathWorks sample assets.
+# Compact Roadsense .rrscene/.rrscenario deliverables are copied to
+# Scenarios/RoadRunner by the project-generation scripts and are tracked.
+Scenarios/RoadRunnerProject/
