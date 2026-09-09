@@ -58,7 +58,7 @@ end
 lines(end+1)="";
 lines(end+1)="## Scenario assets";
 lines(end+1)="";
-lines(end+1)="Five native `drivingScenario` assets cover the unmarked village road, uncontrolled urban intersection, highway slow-vehicle merge, dense market, and sudden cattle crossing. Two RoadRunner HD-map assets provide the detailed village and urban road networks and can be imported as `.rrscene` files with the supplied importer.";
+lines(end+1)="Five native `drivingScenario` assets and five RoadRunner HD maps/scenes/dynamic scenarios cover the unmarked village road, uncontrolled urban intersection, highway slow-vehicle merge, dense market, and sudden cattle crossing. The RoadRunner actor model publishes the safety-gated ego pose and registers MathWorks Vision Detection Generator, Driving Radar Data Generator, and Lidar Point Cloud Generator blocks.";
 lines(end+1)="";
 lines(end+1)="## Validation method and metrics";
 lines(end+1)="";
@@ -75,7 +75,7 @@ lines(end+1)="```";
 lines(end+1)="";
 lines(end+1)="## Deliverables and limitations";
 lines(end+1)="";
-lines(end+1)="The submission contains source, generated SLX models, the shared dictionary, five MATLAB scenarios, two RoadRunner maps/scenes when available, test and validation evidence, presentation dashboards/videos, and a frozen deployment manifest. Synthetic sensor validation demonstrates closed-loop behaviour reproducibly; final sensor-domain claims should additionally be supported by RoadRunner rendering and IDD fine-tuning on the target hardware.";
+lines(end+1)="The submission contains source, generated SLX models, the shared dictionary, five MATLAB scenarios, five RoadRunner maps/scenes/scenarios, test and validation evidence, presentation dashboards/videos, and a frozen deployment manifest. Deterministic synthetic-sensor validation provides reproducible closed-loop acceptance evidence; the RoadRunner model separately verifies native 3D co-simulation and sensor-block registration. Native-measurement adapter validation and IDD fine-tuning remain required before claiming sensor-domain deployment readiness.";
 writelines(lines,reportPath);
 end
 

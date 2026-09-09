@@ -54,4 +54,5 @@ session=struct("App",rrApp,"ScenarioID",uint8(scenarioID), ...
 assignin("base","RoadsenseRoadRunnerSession",session);
 fprintf("Roadsense RoadRunner stage %d started: %s\n",scenarioID,row.Name);
 fprintf("The 3D window is live; the blue ego vehicle is controlled by %s.\n",modelName);
+fprintf("Native sensor blocks active: vision ID 1, radar ID 2, LiDAR ID 3.\n");
 end

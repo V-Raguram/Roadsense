@@ -33,9 +33,9 @@ component models with explicit multi-rate scheduling and safety-gated vehicle
 feedback. `Models/ScenarioAdapters` validates raw sensor arrays, generates
 typed buses, transforms world routes into ego coordinates, and sequences
 scenario startup. `Models/ScenarioLibrary` supplies all five required
-Indian-road routes, actor
-truth trajectories, timed events, native `drivingScenario` assets, and the
-first two RoadRunner HD maps. `Models/ScenarioSensorSource` converts scenario
+Indian-road routes, actor truth trajectories, timed events, native
+`drivingScenario` assets, and five RoadRunner HD maps/scenes/scenarios.
+`Models/ScenarioSensorSource` converts scenario
 truth into bounded camera, LiDAR, and radar measurements with occlusion,
 deterministic noise, dropouts, covariance, and damaged-road evidence.
 `Models/ScenarioClosedLoopHarness` joins all of those blocks to the complete
@@ -54,6 +54,9 @@ closed-loop ego trajectory in the Unreal-based Simulink 3D Animation viewer
 using a native SUV mesh, terrain, road surface, lighting, and brake lamps.
 `Models/SubmissionPackaging` creates the evidence-backed technical report and
 refuses to assemble a final delivery unless all five scenarios are accepted.
+`Models/RoadRunnerIntegration` provides the organized actor-behaviour wrapper,
+native RoadRunner message interface, 3D ego pose publication, and registered
+MathWorks vision, radar, and LiDAR sensor blocks.
 Run the
 following from the repository root:
 
@@ -67,8 +70,15 @@ For a true 3D vehicle replay after (or while) the autonomous stack runs, use:
 runRoadsense3DReplay(ScenarioID=1,StopTime=32)
 ```
 
-Until RoadRunner is available, the temporary MATLAB 3D confidence demo can
-be opened with one command:
+To run the complete 3D RoadRunner village stage, use:
+
+```matlab
+runRoadsenseRoadRunnerScenario(1)
+```
+
+IDs 1 through 5 select the village, intersection, highway merge, market, and
+cattle-crossing stages. For a lightweight fallback that does not require
+RoadRunner, the temporary MATLAB 3D confidence demo can be opened with:
 
 ```matlab
 startRoadsenseConfidenceDemo
@@ -156,8 +166,9 @@ Models/ValidationRunner/ Automated five-scenario benchmark and evidence reports
 Models/ScenarioTuning/ Reproducible closed-loop calibration and profile ranking
 Models/PresentationDashboard/ Static evidence dashboards and MP4 replay export
 Models/SubmissionPackaging/ Technical report and guarded final package builder
+Models/RoadRunnerIntegration/ RoadRunner actor interface and native sensor bank
 Scenarios/MATLAB/       Native Automated Driving Toolbox scenario assets
-Scenarios/RoadRunner/   RoadRunner HD maps and scene manifest
+Scenarios/RoadRunner/   Five RoadRunner HD maps, scenes, and dynamic scenarios
 Tests/SharedData/     Automated shared-contract tests
 Tests/SensorFusion/   Multi-sensor fusion and occlusion tests
 Tests/MotionPrediction/ Prediction contracts, behavior, and integration tests
@@ -176,4 +187,5 @@ Tests/ValidationRunner/ Metric extraction, reporting, and selective logging test
 Tests/ScenarioTuning/ Profile rollback, ranking, timing, and artifact tests
 Tests/PresentationDashboard/ Dashboard, video, and evidence-loading tests
 Tests/SubmissionPackaging/ Report generation and five-scenario acceptance gate
+Tests/RoadRunnerIntegration/ Native messages, sensors, rates, and five-stage assets
 ```

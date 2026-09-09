@@ -62,6 +62,15 @@ classdef testRoadsenseScenarioLibrary < matlab.unittest.TestCase
             testCase.verifyTrue(any(abs(during.Velocities(cattle,2))>single(1)));
         end
 
+        function villageAllowsPostConflictRecoveryTime(testCase)
+            [definition,~,status]=RoadsenseScenarioCatalog(1,0);
+            route=definition.WorldPositions(1:double(definition.Count),:);
+            testCase.verifyGreaterThanOrEqual(double(status.Duration),31);
+            testCase.verifyGreaterThan(route(end,1),23);
+            testCase.verifyGreaterThan(double(status.Duration),22, ...
+                "The stage must continue after its final active mixed-traffic actor.");
+        end
+
         function completionAndInvalidSelectionAreExplicit(testCase)
             [definition,actors,status]=RoadsenseScenarioCatalog(3,28);
             testCase.verifyTrue(definition.Valid); testCase.verifyTrue(actors.Valid);
@@ -80,6 +89,11 @@ classdef testRoadsenseScenarioLibrary < matlab.unittest.TestCase
             loaded=load(native.AssetFile(4),"scenario","metadata");
             testCase.verifyClass(loaded.scenario,"drivingScenario");
             testCase.verifyEqual(loaded.metadata.ScenarioID,uint16(4));
+            portable=readtable(fullfile(testCase.Root,"Scenarios","MATLAB", ...
+                "scenario_manifest.csv"),TextType="string");
+            testCase.verifyTrue(all(startsWith(portable.AssetFile, ...
+                "Scenarios/MATLAB/")));
+            testCase.verifyFalse(any(contains(portable.AssetFile,":\")));
             map=roadrunnerHDMap; read(map,rr.HDMapFile(2));
             testCase.verifyGreaterThanOrEqual(numel(map.Lanes),2);
             mergeMap=roadrunnerHDMap; read(mergeMap,rr.HDMapFile(3));

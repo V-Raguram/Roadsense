@@ -54,7 +54,11 @@ end
 manifest=table((1:5).',displayNames.',identifiers.',durations,routePoints, ...
     actorCounts,requiredEvents,files,'VariableNames',{'ScenarioID','Name', ...
     'Identifier','Duration_s','RoutePoints','TrafficActors','RequiredEvents','AssetFile'});
-writetable(manifest,fullfile(assetDir,"scenario_manifest.csv"));
+% Return absolute paths to callers in this MATLAB session, but keep the
+% committed manifest portable across machines and clone locations.
+portable=manifest;
+portable.AssetFile="Scenarios/MATLAB/"+identifiers.'+".mat";
+writetable(portable,fullfile(assetDir,"scenario_manifest.csv"));
 fprintf("Generated five drivingScenario assets in %s\n",assetDir);
 end
 
