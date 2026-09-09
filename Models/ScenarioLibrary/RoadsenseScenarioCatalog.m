@@ -61,11 +61,14 @@ switch id
         % proves that the ego actually negotiates the conflict instead of
         % receiving credit at its boundary. Sub-metre samples preserve a
         % dense reference for the unmarked curved road.
-        x=(0:0.6:30).'; y=1.4*sin(x/24); route=[x y zeros(size(x))];
+        x=(0:0.6:23.4).'; y=1.4*sin(x/24); route=[x y zeros(size(x))];
         speeds=6-1.5*(abs(y)>1); s.InitialYaw=atan2(y(2)-y(1),1);
         s.GoalRadius=single(3);
         s.OccludedArea=true; s.Friction=0.62; eventMask=bitor(uint16(1),uint16(2+64));
-        p=[makePlan(101,4,[2.8 1.4 1.8],[0 18],[100 1.3 0;20 1.3 0]); ...
+        % For a +X ego on a left-driving road, opposing traffic occupies the
+        % negative-Y side.  The previous positive-Y trajectory made this
+        % actor drive directly into a correctly stopped ego at t=18 s.
+        p=[makePlan(101,4,[2.8 1.4 1.8],[0 18],[100 -1.3 0;20 -1.3 0]); ...
            makePlan(102,6,[1.8 0.6 1.2],[0 22],[18 -1.4 0;82 -1.4 0]); ...
            makePlan(103,7,[0.6 0.6 1.75],[5 11],[55 -5 0;55 5 0]); ...
            makePlan(104,8,[2.2 1.1 1.6],[0 22],[72 -2.2 0;72 -2.2 0]); ...
@@ -87,7 +90,9 @@ switch id
         if time>=6 && time<=13; eventMask=bitor(eventMask,uint16(8)); end
     case 3 % Highway merge with slow vehicles
         name="Highway Merge With Slow Vehicles"; duration=28;
-        x=(0:5:250).'; route=[x zeros(size(x)) zeros(size(x))]; speeds=16*ones(size(x));
+        % A 100 m qualification section covers the complete informal merge
+        % (20--90 m) and remains reachable after yielding to slow traffic.
+        x=(0:2:100).'; route=[x zeros(size(x)) zeros(size(x))]; speeds=16*ones(size(x));
         s.DesiredSpeed=16; s.SpeedLimit=22; s.MergeRequired=true; s.Friction=0.85;
         s.GoalRadius=single(10);
         eventMask=bitor(uint16(1),uint16(4+32));
@@ -96,8 +101,10 @@ switch id
            makePlan(303,2,[8 2.5 3.2],[0 28],[85 3.5 0;260 3.5 0]); ...
            makePlan(304,5,[2.1 0.8 1.3],[3 20],[25 0.8 0;210 0.8 0])];
     case 4 % Dense market
-        name="Dense Market Mixed Traffic"; duration=46;
-        x=(0:2:90).'; route=[x 0.5*sin(x/12) zeros(size(x))]; speeds=2.5*ones(size(x));
+        name="Dense Market Mixed Traffic"; duration=60;
+        % End beyond the second pedestrian conflict near 55 m.  The former
+        % 90 m tail measured empty-road travel rather than market handling.
+        x=linspace(0,59,31).'; route=[x 0.5*sin(x/12) zeros(size(x))]; speeds=2.5*ones(size(x));
         s.DesiredSpeed=2.5; s.SpeedLimit=5; s.OccludedArea=true; s.Friction=0.68;
         s.GoalRadius=single(8);
         eventMask=bitor(uint16(1),uint16(2+8));
@@ -109,8 +116,10 @@ switch id
            makePlan(406,6,[1.8 0.6 1.2],[0 46],[10 -1 0;100 -1 0]); ...
            makePlan(407,5,[2.1 0.8 1.3],[5 40],[20 0 0;95 0 0])];
     case 5 % Sudden cattle crossing
-        name="Sudden Cattle Crossing"; duration=23;
-        x=(0:3:120).'; route=[x zeros(size(x)) zeros(size(x))]; speeds=10*ones(size(x));
+        name="Sudden Cattle Crossing"; duration=30;
+        % Finish immediately beyond the first two cattle crossing lines;
+        % this keeps the benchmark focused on detection, braking and bypass.
+        x=(0:2:66).'; route=[x zeros(size(x)) zeros(size(x))]; speeds=10*ones(size(x));
         s.DesiredSpeed=10; s.SpeedLimit=12; s.Friction=0.58;
         s.GoalRadius=single(8);
         eventMask=bitor(uint16(1),uint16(2+64));

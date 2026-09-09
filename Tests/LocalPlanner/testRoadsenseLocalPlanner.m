@@ -131,6 +131,17 @@ classdef testRoadsenseLocalPlanner < matlab.unittest.TestCase
             testCase.verifyLessThan(out{7}(end),single(0.05));
         end
 
+        function emergencyFallbackStartsAtDisplacedEgoPose(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("emergency");
+            inputs{1}.Position(2)=inputs{1}.Position(2)+single(3.5);
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{15});
+            testCase.verifyTrue(out{16});
+            testCase.verifyLessThan(norm(double( ...
+                out{5}(1,:)-inputs{1}.Position(1:2).')),0.30);
+            testCase.verifyLessThanOrEqual(max(abs(out{9})),single(0.221));
+        end
+
         function fullyBlockedCorridorUsesMinimumRiskFallback(testCase)
             [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("blocked");
             planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
@@ -159,6 +170,81 @@ classdef testRoadsenseLocalPlanner < matlab.unittest.TestCase
             testCase.verifyTrue(out{16});
             testCase.verifyFalse(out{15});
             testCase.verifyGreaterThan(out{14},uint16(0));
+        end
+
+        function separatingTrackBehindEgoCannotDeadlockRecovery(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
+            inputs{1}.Velocity=single([0;0;0]);
+            tracks=inputs{3}; predictions=inputs{4};
+            tracks.Count=uint16(1); tracks.ValidMask(1)=true;
+            tracks.TrackIDs(1)=uint32(88); tracks.ExistenceProbabilities(1)=single(0.9);
+            tracks.Positions(1,:)=single([-1 -2.4 0]);
+            tracks.Velocities(1,:)=single([-5 0 0]);
+            tracks.Dimensions(1,:)=single([2.8 1.4 1.8]);
+            predictions.Count=uint16(1); predictions.ValidMask(1)=true;
+            predictions.TrackIDs(1)=uint32(88); predictions.NumModes(1)=uint8(1);
+            predictions.ModeProbabilities(1,1)=single(1);
+            for step=1:16
+                t=double(predictions.TimeOffsets(step));
+                predictions.Positions(1,step,1,1)=single(-1-5*t);
+                predictions.Positions(1,step,1,2)=single(-2.4);
+                predictions.PositionCovariances(:,:,step,1,1)=single(diag([4 4]));
+            end
+            inputs{3}=tracks; inputs{4}=predictions;
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{16});
+            testCase.verifyFalse(out{15});
+            testCase.verifyGreaterThan(out{14},uint16(0));
+            testCase.verifyGreaterThan(out{7}(end),single(0));
+        end
+
+        function clearStandstillCanRecoverFromStalePredictionEnvelope(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
+            inputs{1}.Velocity=single([0;0;0]);
+            inputs{5}.StopDistance=single(2);
+            tracks=inputs{3}; predictions=inputs{4};
+            tracks.Count=uint16(1); tracks.ValidMask(1)=true;
+            tracks.TrackIDs(1)=uint32(89); tracks.ExistenceProbabilities(1)=single(0.9);
+            tracks.Positions(1,:)=single([25 8 0]);
+            tracks.Dimensions(1,:)=single([4 2 1.6]);
+            predictions.Count=uint16(1); predictions.ValidMask(1)=true;
+            predictions.TrackIDs(1)=uint32(89); predictions.NumModes(1)=uint8(1);
+            predictions.ModeProbabilities(1,1)=single(1);
+            for step=1:16
+                predictions.Positions(1,step,1,1)=single(3);
+                predictions.Positions(1,step,1,2)=single(0);
+                predictions.PositionCovariances(:,:,step,1,1)=single(diag([4 4]));
+            end
+            inputs{3}=tracks; inputs{4}=predictions;
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{16});
+            testCase.verifyFalse(out{15});
+            testCase.verifyGreaterThan(out{14},uint16(0));
+            testCase.verifyGreaterThan(out{7}(end),single(0));
+        end
+
+        function recoveryUsesShortSmoothMapCheckedHorizon(testCase)
+            [inputs{1:6}]=createSyntheticRoadsensePlannerInputs("cruise");
+            inputs{1}.Velocity=single([0;0;0]);
+            inputs{5}.StopDistance=single(2);
+            map=inputs{2};
+            x=double(map.XLimits(1))+(0.5:319.5)*double(map.Resolution);
+            y=double(map.YLimits(1))+(0.5:199.5)*double(map.Resolution);
+            [xGrid,yGrid]=meshgrid(x,y);
+            blocked=xGrid>=5.5 & xGrid<=20 & abs(yGrid)<=8;
+            map.StaticOccupancy(blocked)=single(0.98);
+            map.Occupancy(blocked)=single(0.98);
+            map.CombinedCost(blocked)=single(0.98);
+            inputs{2}=map;
+            planner=RoadsenseLocalPlannerSystem; [out{1:26}]=planner(inputs{:});
+            testCase.verifyTrue(out{16});
+            testCase.verifyFalse(out{15});
+            testCase.verifyEqual(out{14},uint16(1));
+            testCase.verifyLessThanOrEqual(max(abs(out{9})),single(0.221));
+            jerk=diff(double(out{8}))/0.1;
+            testCase.verifyLessThanOrEqual(max(abs(jerk)),2.501);
+            testCase.verifyGreaterThan(out{7}(end),single(0));
+            testCase.verifyLessThanOrEqual(max(out{7}),single(1.21));
         end
 
         function followingClearanceStillAllowsLateralPassing(testCase)

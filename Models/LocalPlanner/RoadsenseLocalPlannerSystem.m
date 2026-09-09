@@ -89,6 +89,32 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                 [best,bestCost,bestClearance,candidateCount,feasibleCount]= ...
                     object.searchCandidates(ego,map,tracks,predictions,behaviour, ...
                     reference,referenceCount);
+                % Stay in the capped recovery envelope until a normal
+                % six-second candidate becomes feasible. Dropping it at the
+                % first 0.2 m/s of motion caused brake/restart oscillation.
+                standstillRecovery=logical(object.longitudinalSpeed(ego)<=1.50 && ...
+                    double(behaviour.ForwardRisk)<0.20 && ...
+                    isinf(double(behaviour.MinimumTTC)) && ~behaviour.EmergencyRequested);
+                if ~best.Valid && standstillRecovery
+                    % Re-enter motion cautiously after a transient hazard.
+                    % Only the first two seconds are admitted here; normal
+                    % six-second prediction filtering resumes as soon as a
+                    % complete candidate becomes feasible again.
+                    recoveryBehaviour=behaviour;
+                    recoveryBehaviour.TargetSpeed=min(behaviour.TargetSpeed,single(1.2));
+                    recoveryBehaviour.MaximumAcceleration=min( ...
+                        behaviour.MaximumAcceleration,single(0.6));
+                    recovery=object.buildCandidate(ego,recoveryBehaviour,reference, ...
+                        referenceCount,single(0),single(1));
+                    [recoverySafe,recoveryCost]=object.evaluateMapCandidate( ...
+                        recovery,map,21);
+                    if recovery.Valid && recoverySafe && ...
+                            object.kinematicallyFeasible(recovery)
+                        best=recovery; bestCost=recoveryCost;
+                        bestClearance=1000;
+                        feasibleCount=max(feasibleCount,uint16(1));
+                    end
+                end
                 forceFallback=behaviourCode==uint8(8) || behaviour.EmergencyRequested;
                 if best.Valid && ~forceFallback
                     if behaviourCode==uint8(10) && abs(best.TargetOffset)>single(0.5)
@@ -289,6 +315,11 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
             if speed<=0.05 && acceleration<0; acceleration=0; end
             minimumAcceleration=min(double(behaviour.MinimumAcceleration),-6.0);
             segmentIndex=2; cumulativeStart=0;
+            [initialBasePosition,initialBaseYaw,~,segmentIndex,cumulativeStart]= ...
+                object.referenceAtForward(reference,nref,0,segmentIndex,cumulativeStart);
+            initialNormal=[-sin(initialBaseYaw) cos(initialBaseYaw)];
+            initialLateral=dot(-initialBasePosition,initialNormal);
+            transitionDistance=max(double(object.LateralTransitionDistance),1.0);
             for point=1:object.MaxPlanPoints
                 if point>1
                     acceleration=max(minimumAcceleration, ...
@@ -298,9 +329,13 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                     speed=newSpeed;
                     if speed==0; acceleration=0; end
                 end
-                [basePosition,~,~,segmentIndex,cumulativeStart]= ...
+                [basePosition,baseYaw,~,segmentIndex,cumulativeStart]= ...
                     object.referenceAtForward(reference,nref,progress,segmentIndex,cumulativeStart);
-                candidate.Position(point,:)=single(basePosition);
+                u=min(max(progress/transitionDistance,0),1);
+                blend=10*u^3-15*u^4+6*u^5;
+                lateral=initialLateral*(1-blend);
+                candidate.Position(point,:)=single(basePosition+ ...
+                    lateral*[-sin(baseYaw) cos(baseYaw)]);
                 candidate.Speed(point)=single(speed);
                 candidate.Acceleration(point)=single(acceleration);
             end
@@ -311,7 +346,7 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
             n=object.MaxPlanPoints;
             for point=1:n-1
                 delta=double(candidate.Position(point+1,:)-candidate.Position(point,:));
-                if norm(delta)>1e-5
+                if norm(delta)>1e-3
                     candidate.Yaw(point)=single(atan2(delta(2),delta(1)));
                 elseif point>1
                     candidate.Yaw(point)=candidate.Yaw(point-1);
@@ -320,7 +355,7 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
             candidate.Yaw(n)=candidate.Yaw(max(1,n-1));
             for point=2:n-1
                 distance=norm(double(candidate.Position(point+1,:)-candidate.Position(point-1,:)));
-                if distance>1e-4
+                if distance>2e-2
                     deltaYaw=object.wrapAngle(double(candidate.Yaw(point+1))-double(candidate.Yaw(point-1)));
                     candidate.Curvature(point)=single(deltaYaw/distance);
                 end
@@ -335,26 +370,26 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
         function [feasible,cost,minimumClearance]=evaluateCandidate(object,candidate, ...
                 map,tracks,predictions,behaviour,enforceCollision)
             feasible=candidate.Valid; minimumClearance=inf;
-            if max(abs(candidate.Curvature))>object.MaximumCurvature+single(1e-4)
-                feasible=false;
-            end
+            if ~object.kinematicallyFeasible(candidate); feasible=false; end
             jerk=diff(double(candidate.Acceleration))/double(object.PlanStep);
-            if ~isempty(jerk) && max(abs(jerk))>double(object.MaximumJerk)+1e-3
-                feasible=false;
-            end
-            [mapSafe,mapCost]=object.evaluateMapCandidate(candidate,map);
+            [mapSafe,mapCost]=object.evaluateMapCandidate(candidate,map,object.MaxPlanPoints);
             if ~mapSafe
                 if enforceCollision; feasible=false; end
                 minimumClearance=min(minimumClearance,0);
             end
             dynamicRisk=0;
+            standstillRecovery=logical(double(behaviour.StopDistance)<=2.2 && ...
+                double(behaviour.ForwardRisk)<0.20 && ...
+                isinf(double(behaviour.MinimumTTC)) && ~behaviour.EmergencyRequested);
             if predictions.Valid && predictions.Count>0
                 for point=1:2:object.MaxPlanPoints
                     [collision,clearance,risk]=object.dynamicSafety(candidate.Position(point,:), ...
                         candidate.Yaw(point),candidate.Time(point),tracks,predictions,behaviour);
                     minimumClearance=min(minimumClearance,clearance);
                     dynamicRisk=dynamicRisk+risk;
-                    if collision && enforceCollision; feasible=false; end
+                    if collision && enforceCollision && ~standstillRecovery
+                        feasible=false;
+                    end
                 end
             end
             if ~isfinite(minimumClearance); minimumClearance=1000; end
@@ -380,14 +415,15 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                 16*curvatureEffort+0.015*jerkEffort+avoidanceBias-0.035*progress;
         end
 
-        function [safe,totalCost]=evaluateMapCandidate(object,candidate,map)
+        function [safe,totalCost]=evaluateMapCandidate(object,candidate,map,maximumPoint)
             halfLength=double(object.VehicleLength)/2+0.20;
             halfWidth=double(object.VehicleWidth)/2+0.20;
             offsets=[0 0; halfLength halfWidth; halfLength -halfWidth; ...
                 -halfLength halfWidth; -halfLength -halfWidth; halfLength 0; ...
                 -halfLength 0; 0 halfWidth; 0 -halfWidth];
             safe=true; totalCost=0;
-            for point=1:2:object.MaxPlanPoints
+            maximumPoint=min(maximumPoint,object.MaxPlanPoints);
+            for point=1:2:maximumPoint
                 yaw=double(candidate.Yaw(point));
                 rotation=[cos(yaw) -sin(yaw);sin(yaw) cos(yaw)];
                 samples=offsets*rotation.'+double(candidate.Position(point,:));
@@ -411,6 +447,16 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
             end
         end
 
+        function feasible=kinematicallyFeasible(object,candidate)
+            feasible=max(abs(candidate.Curvature))<= ...
+                object.MaximumCurvature+single(1e-4);
+            jerk=diff(double(candidate.Acceleration))/double(object.PlanStep);
+            if ~isempty(jerk)
+                feasible=feasible && ...
+                    max(abs(jerk))<=double(object.MaximumJerk)+1e-3;
+            end
+        end
+
         function [collision,minimumClearance,risk]=dynamicSafety(object,position,yaw,time, ...
                 tracks,predictions,behaviour)
             collision=false; minimumClearance=inf; risk=0;
@@ -424,6 +470,16 @@ classdef RoadsenseLocalPlannerSystem < matlab.System
                 trackIndex=object.findTrack(tracks,predictions.TrackIDs(objectIndex));
                 existence=1; dimensions=[1.0 0.8];
                 if trackIndex>0
+                    % A track whose centre is already behind the ego and
+                    % continues to separate cannot intersect any point on
+                    % this forward-only candidate.  Ignoring its expanding
+                    % coast covariance prevents a safe stop from becoming a
+                    % permanent planner deadlock after an oncoming pass.
+                    currentLongitudinal=double(tracks.Positions(trackIndex,1));
+                    relativeLongitudinalSpeed=double(tracks.Velocities(trackIndex,1));
+                    if currentLongitudinal<0 && relativeLongitudinalSpeed<=0
+                        continue
+                    end
                     existence=max(0,double(tracks.ExistenceProbabilities(trackIndex)));
                     dimensions=max(double(tracks.Dimensions(trackIndex,1:2)),[0.5 0.5]);
                 end
